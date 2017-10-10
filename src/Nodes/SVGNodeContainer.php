@@ -142,10 +142,33 @@ abstract class SVGNodeContainer extends SVGNode
 
     public function guessWidth()
     {
-        $width = 0;
+        return $this->guessDimension('width');
+    }//end guessWidth()
+
+    public function guessHeight()
+    {
+        return $this->guessDimension('height');
+    }//end guessHeight()
+
+    public function guessDimension($dimension = 'width')
+    {
+        $measurement = 0;
+
+        if ($dimension === 'width') {
+            $coordinateKey = 0;
+            $letter        = 'X';
+        }
+
+        if ($dimension === 'height') {
+            $coordinateKey = 1;
+            $letter        = 'Y';
+        }
+
+        $getDimension  = 'get'.ucfirst($dimension);
+        $getCoordinate = 'get'.$letter;
 
         if (false === property_exists($this, 'children')) {
-            return $width;
+            return $measurement;
         }
 
         foreach ($this->children as $child) {
@@ -153,7 +176,7 @@ abstract class SVGNodeContainer extends SVGNode
 
             switch ($nodeName) {
                 case 'rect':
-                    $width = ($child->getX() + $child->getWidth());
+                    $measurement = ($child->$getCoordinate() + $child->$getDimension());
                     break;
 
                 case 'path':
@@ -165,16 +188,16 @@ abstract class SVGNodeContainer extends SVGNode
 
                     foreach ($coordinates as $coordinateGroups) {
                         foreach ($coordinateGroups as $coordinate) {
-                            if ($coordinate[0] > $width) {
-                                $width = $coordinate[0];
+                            if ($coordinate[$coordinateKey] > $measurement) {
+                                $measurement = $coordinate[$coordinateKey];
                             }
                         }
                     }
                     break;
 
                 case 'g':
-                    if ($width < $child->guessWidth()) {
-                        $width = $child->guessWidth();
+                    if ($measurement < $child->guessDimension($dimension)) {
+                        $measurement = $child->guessDimension($dimension);
                     }
 
                     break;
@@ -185,8 +208,8 @@ abstract class SVGNodeContainer extends SVGNode
             }
         }
 
-        return $width;
-    }//end guessWidth()
+        return $measurement;
+    }//end guessDimension()
 
     public function removeGroupTransforms()
     {
