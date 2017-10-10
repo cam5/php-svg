@@ -98,6 +98,46 @@ abstract class SVGNodeContainer extends SVGNode
         return false;
     }
 
+    public function findChildNodeById($id)
+    {
+        return $this->filterChildrenForId($this, $id);
+    }//end findChildNodeById()
+
+    private function filterChildrenForId($node, $id)
+    {
+        $ret = false;
+
+        if ((string) $node->getAttribute('id') === $id) {
+            return $node;
+        }
+
+        if (false === property_exists($node, 'children')) {
+            return false;
+        }
+
+        foreach ($node->children as $child) {
+            if ((string) $child->getAttribute('id') === $id) {
+                return $child;
+            }
+
+            if (false === property_exists($child, 'children')) {
+                continue;
+            }
+
+            if (count($child->children) > 0) {
+                foreach ($child->children as $grandChild) {
+                    $ret = $this->filterChildrenForId($grandChild, $id);
+
+                    if (false !== $ret) {
+                        return $ret;
+                    }
+                }
+            }
+        }
+
+        return $ret;
+    }//end filterChildrenForId()
+
     /**
      * @return int The amount of children in this container.
      */

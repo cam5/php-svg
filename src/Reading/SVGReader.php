@@ -30,6 +30,8 @@ class SVGReader
         'polyline'  => 'SVG\Nodes\Shapes\SVGPolyline',
         'path'      => 'SVG\Nodes\Shapes\SVGPath',
         'image'     => 'SVG\Nodes\Embedded\SVGImageElement',
+        'text'      => 'SVG\Nodes\Text\SVGText',
+        'tspan'     => 'SVG\Nodes\Text\SVGTspan',
     );
     /**
      * @var string[] @styleAttributes Attributes to be interpreted as styles.

@@ -4,6 +4,7 @@ namespace SVG\Writing;
 
 use SVG\Nodes\Structures\SVGStyle;
 use SVG\Nodes\SVGNode;
+use SVG\Nodes\Text\SVGTspan;
 use SVG\Nodes\SVGNodeContainer;
 
 /**
@@ -49,7 +50,7 @@ class SVGWriter
         $this->appendAttributes($node->getSerializableAttributes());
         $this->appendStyles($node->getSerializableStyles());
 
-        if (!($node instanceof SVGNodeContainer) && !($node instanceof SVGStyle)) {
+        if (!($node instanceof SVGNodeContainer) && !($node instanceof SVGStyle) && !($node instanceof SVGTspan)) {
             $this->outString .= ' />';
             return;
         }
@@ -62,9 +63,16 @@ class SVGWriter
             return;
         }
 
-        for ($i = 0, $n = $node->countChildren(); $i < $n; ++$i) {
-            $this->writeNode($node->getChild($i));
+        if ($node instanceof SVGTspan) {
+            $this->outString .= $node->text;
         }
+
+        if (!($node instanceof SVGTspan)) {
+            for ($i = 0, $n = $node->countChildren(); $i < $n; ++$i) {
+                $this->writeNode($node->getChild($i));
+            }
+        }
+
         $this->outString .= '</'.$node->getName().'>';
     }
 
