@@ -5,6 +5,8 @@ namespace SVG\Nodes;
 use SVG\Nodes\Structures\SVGStyle;
 use SVG\Rasterization\SVGRasterizer;
 use SVG\Utilities\SVGStyleParser;
+use SVG\Rasterization\Path\SVGPathParser;
+use SVG\Rasterization\Path\SVGPathApproximator;
 
 /**
  * Represents an SVG image element that contains child elements.
@@ -137,6 +139,76 @@ abstract class SVGNodeContainer extends SVGNode
 
         return $ret;
     }//end filterChildrenForId()
+
+    public function guessWidth()
+    {
+        $width = 0;
+
+        if (false === property_exists($this, 'children')) {
+            return $width;
+        }
+
+        foreach ($this->children as $child) {
+            $nodeName = $child->getName();
+
+            switch ($nodeName) {
+                case 'rect':
+                    $width = ($child->getX() + $child->getWidth());
+                    break;
+
+                case 'path':
+                    $pathDesc    = $child->getDescription();
+                    $parser      = new SVGPathParser();
+                    $commands    = $parser->parse($pathDesc);
+                    $approxer    = new SVGPathApproximator();
+                    $coordinates = $approxer->approximate($commands);
+
+                    foreach ($coordinates as $coordinateGroups) {
+                        foreach ($coordinateGroups as $coordinate) {
+                            if ($coordinate[0] > $width) {
+                                $width = $coordinate[0];
+                            }
+                        }
+                    }
+                    break;
+
+                case 'g':
+                    if ($width < $child->guessWidth()) {
+                        $width = $child->guessWidth();
+                    }
+
+                    break;
+
+                default:
+                    // There's no guess.
+                    break;
+            }
+        }
+
+        return $width;
+    }//end guessWidth()
+
+    public function removeGroupTransforms()
+    {
+
+        if (false === property_exists($this, 'children')) {
+            return;
+        }
+
+        if (null !== $this->getAttribute('transform')) {
+            $this->removeAttribute('transform', '');
+        }
+
+        foreach ($this->children as $child) {
+            if ('g' === $child->getName()) {
+                if (null !== $child->getAttribute('transform')) {
+                    $child->removeAttribute('transform', '');
+                }
+
+                $child->removeGroupTransforms();
+            }
+        }
+    }//end removeGroupTransforms()
 
     /**
      * @return int The amount of children in this container.

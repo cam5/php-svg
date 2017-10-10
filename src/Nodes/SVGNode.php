@@ -202,8 +202,16 @@ abstract class SVGNode
      */
     public function getSerializableAttributes()
     {
-        return $this->attributes;
-    }
+        $ret = [];
+
+        foreach ($this->attributes as $key => $val) {
+            if (false === strpos($key, 'inkscape')) {
+                $ret[$key] = $val;
+            }
+        }
+
+        return $ret;
+    }//end getSerializableAttributes()
 
     /**
      * Constructs a set of styles that shall be included in generated XML.
